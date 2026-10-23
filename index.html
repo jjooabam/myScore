@@ -13,7 +13,7 @@
   <link rel="manifest" href="manifest.json">
   <link rel="apple-touch-icon" href="icon-192.png">
 
-  <link rel="stylesheet" href="style.css?v=4">
+  <link rel="stylesheet" href="style.css?v=5">
 </head>
 <body>
 
@@ -22,12 +22,14 @@
     <div class="header-title-box">
       <div class="logo-badge">⛳</div>
       <div>
-        <div class="header-title">MY GOLF NOTE <span style="font-size:11px; background:#10b981; color:white; padding:1px 5px; border-radius:4px; vertical-align:middle;">v4</span></div>
+        <div class="header-title">MY GOLF NOTE <span style="font-size:11px; background:#10b981; color:white; padding:1px 5px; border-radius:4px; vertical-align:middle;">v6</span></div>
         <div class="header-subtitle">전국 골프장 스마트 트래커</div>
       </div>
     </div>
     <div style="display:flex; gap:6px; align-items:center;">
-      <button onclick="forceUpdateApp()" style="font-size:11px; padding:4px 8px; border-radius:12px; background:#334155; color:#cbd5e1; border:1px solid #475569; cursor:pointer;" title="최신버전 갱신">🔄 갱신</button>
+      <!-- Google Login Button / Profile Box -->
+      <div id="auth-header-box"></div>
+      <button onclick="forceUpdateApp()" style="font-size:11px; padding:4px 8px; border-radius:12px; background:#334155; color:#cbd5e1; border:1px solid #475569; cursor:pointer;" title="최신버전 갱신">🔄</button>
       <div id="gps-status" class="gps-badge" title="클릭하여 GPS 재수신">
         📡 GPS
       </div>
@@ -309,6 +311,8 @@
     <section id="history-view" class="view-section">
       <div class="card">
         <h2 style="font-size: 18px; font-weight: 700; margin-bottom: 6px;">📁 지난 라운드 보관함</h2>
+        <!-- Cloud Sync Notification Status Banner -->
+        <div id="cloud-sync-status" style="font-size: 12px; padding: 10px 12px; border-radius: 10px; background: rgba(15,23,42,0.8); border: 1px solid var(--border); margin-bottom: 14px; line-height: 1.5;"></div>
         <p style="font-size: 12px; color: var(--text-muted); margin-bottom: 16px;">
           저장된 라운드를 터치하면 스코어카드와 통계를 언제든 다시 확인하고 수정할 수 있습니다.
         </p>
@@ -400,8 +404,13 @@
     </button>
   </nav>
 
-  <script src="courses.js?v=4"></script>
-  <script src="app.js?v=4"></script>
+  <!-- Firebase SDK (v10 compat) -->
+  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
+  <script src="firebase.js?v=6"></script>
+  <script src="courses.js?v=6"></script>
+  <script src="app.js?v=6"></script>
   <script>
     function forceUpdateApp() {
       if (confirm("최신 업데이트를 반영하기 위해 캐시를 갱신하고 새로고침하시겠습니까?")) {
@@ -417,7 +426,7 @@
 
     if ('serviceWorker' in navigator) {
       window.addEventListener('load', () => {
-        navigator.serviceWorker.register('sw.js?v=4')
+        navigator.serviceWorker.register('sw.js?v=6')
           .then((reg) => {
             reg.update();
           })

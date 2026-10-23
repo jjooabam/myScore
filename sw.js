@@ -1,10 +1,11 @@
-const CACHE_NAME = 'golf-score-v4';
+const CACHE_NAME = 'golf-score-v6';
 const ASSETS_TO_CACHE = [
   './',
   './index.html',
-  './style.css?v=4',
-  './courses.js?v=4',
-  './app.js?v=4',
+  './style.css?v=6',
+  './firebase.js?v=6',
+  './courses.js?v=6',
+  './app.js?v=6',
   './manifest.json',
   './icon-192.png',
   './icon-512.png'
@@ -31,6 +32,11 @@ self.addEventListener('activate', (event) => {
 
 // Network First
 self.addEventListener('fetch', (event) => {
+  // Firebase API 요청은 캐시하지 않고 직접 네트워크로 통과
+  if (event.request.url.includes('firebase') || event.request.url.includes('googleapis')) {
+    return;
+  }
+
   event.respondWith(
     fetch(event.request)
       .then((networkResponse) => {

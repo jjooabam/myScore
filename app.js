@@ -4,14 +4,20 @@ let activeRound = null;
 let currentHoleIdx = 0;
 let userCoords = null;
 
-document.addEventListener("DOMContentLoaded", () => {
+function initApp() {
   allCourses = getCourses();
   initGolfCourseSelect();
   initRoundDateInput();
   loadSavedRound();
   setupEventListeners();
   requestGPSLocation();
-});
+}
+
+if (document.readyState === "loading") {
+  document.addEventListener("DOMContentLoaded", initApp);
+} else {
+  initApp();
+}
 
 function initRoundDateInput() {
   const dateInput = document.getElementById("round-date-input");
@@ -256,6 +262,8 @@ function changeHolePar(newPar) {
   renderHoleView();
   saveCurrentRound();
 }
+
+function renderHoleView() {
   if (!activeRound) return;
   const hole = activeRound.holes[currentHoleIdx];
 
@@ -854,6 +862,11 @@ function archiveActiveRound(round) {
     list.unshift(round);
   }
   localStorage.setItem("golf_rounds_history", JSON.stringify(list));
+
+  // Firebase 클라우드 영구 저장
+  if (typeof saveRoundToCloud === "function") {
+    saveRoundToCloud(round);
+  }
 }
 
 // 8. Custom Course Add
