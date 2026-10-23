@@ -301,6 +301,11 @@ select:focus, input:focus {
   margin-bottom: 6px;
 }
 
+.shot-type-grid.par3-grid {
+  grid-template-columns: repeat(2, 1fr);
+  gap: 8px;
+}
+
 .btn-shot-choice {
   padding: 12px 4px;
   background: #0f172a;
@@ -321,6 +326,13 @@ select:focus, input:focus {
   box-shadow: 0 0 10px rgba(16, 185, 129, 0.3);
 }
 
+.btn-shot-choice.green-choice.selected {
+  background: #10b981;
+  border-color: #10b981;
+  color: #ffffff;
+  box-shadow: 0 0 12px rgba(16, 185, 129, 0.4);
+}
+
 .btn-shot-choice.penalty-ob.selected {
   background: rgba(239, 68, 68, 0.22);
   border-color: var(--danger);
@@ -339,6 +351,7 @@ select:focus, input:focus {
   grid-template-columns: repeat(4, 1fr);
   gap: 6px;
   margin-top: 4px;
+  margin-bottom: 12px;
 }
 
 .club-btn {
@@ -360,6 +373,47 @@ select:focus, input:focus {
   border-color: var(--accent);
   box-shadow: 0 0 10px rgba(56, 189, 248, 0.35);
   font-weight: 800;
+}
+
+/* Shot Penalty Result Toggle Bar (Normal / Hazard / OB) */
+.shot-result-bar {
+  display: flex;
+  background: #0f172a;
+  border-radius: 10px;
+  padding: 4px;
+  border: 1px solid var(--border);
+  gap: 4px;
+  margin-top: 4px;
+}
+
+.btn-result-toggle {
+  flex: 1;
+  padding: 9px 4px;
+  border: none;
+  border-radius: 8px;
+  background: transparent;
+  color: var(--text-muted);
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.btn-result-toggle.selected.normal {
+  background: #334155;
+  color: #f8fafc;
+}
+
+.btn-result-toggle.selected.hazard {
+  background: rgba(245, 158, 11, 0.25);
+  color: #fbbf24;
+  border: 1px solid var(--warning);
+}
+
+.btn-result-toggle.selected.ob {
+  background: rgba(239, 68, 68, 0.25);
+  color: #f87171;
+  border: 1px solid var(--danger);
 }
 
 /* Counter Control */

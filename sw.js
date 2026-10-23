@@ -1,10 +1,10 @@
-const CACHE_NAME = 'golf-score-v2';
+const CACHE_NAME = 'golf-score-v3';
 const ASSETS_TO_CACHE = [
   './',
   './index.html',
-  './style.css?v=2',
-  './courses.js?v=2',
-  './app.js?v=2',
+  './style.css?v=3',
+  './courses.js?v=3',
+  './app.js?v=3',
   './manifest.json',
   './icon-192.png',
   './icon-512.png'
@@ -29,7 +29,7 @@ self.addEventListener('activate', (event) => {
   self.clients.claim();
 });
 
-// Network First 전략 (최신 파일 우선 가져오기)
+// Network First
 self.addEventListener('fetch', (event) => {
   event.respondWith(
     fetch(event.request)

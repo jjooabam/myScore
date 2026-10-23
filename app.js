@@ -1,12 +1,9 @@
-// App State
+// Golf Score Tracker App v3.0
 let allCourses = [];
 let activeRound = null;
-let currentHoleIdx = 0; // 0 to 17
+let currentHoleIdx = 0;
 let userCoords = null;
 
-console.log("⛳ Golf Score Tracker App v2.0 Loaded!");
-
-// Initialize
 document.addEventListener("DOMContentLoaded", () => {
   allCourses = getCourses();
   initGolfCourseSelect();
@@ -24,7 +21,7 @@ function initRoundDateInput() {
   }
 }
 
-// 1. GPS Location Check
+// 1. GPS
 function requestGPSLocation() {
   const badge = document.getElementById("gps-status");
   if (!navigator.geolocation) {
@@ -69,7 +66,6 @@ function findNearestCourse(lat, lng) {
     const kmStr = minDistance.toFixed(1);
     badge.innerText = `⛳ ${nearest.name} (${kmStr}km)`;
 
-    // 라운드 시작 전이고 반경 30km 이내면 골프장 자동 선택
     if (!activeRound && minDistance <= 30) {
       const select = document.getElementById("course-select");
       if (select && select.value !== nearest.id) {
@@ -80,7 +76,7 @@ function findNearestCourse(lat, lng) {
   }
 }
 
-// 2. Course & Round Setup
+// 2. Setup
 function initGolfCourseSelect() {
   const select = document.getElementById("course-select");
   select.innerHTML = '<option value="">-- 골프장 선택 --</option>';
@@ -104,7 +100,7 @@ function onCourseChange() {
 
   if (!course || !course.courses) return;
 
-  course.courses.forEach((sub, idx) => {
+  course.courses.forEach((sub) => {
     const optF = document.createElement("option");
     optF.value = sub.id;
     optF.innerText = sub.name;
@@ -140,13 +136,11 @@ function startRound() {
 
   const holes = [];
 
-  // 전반 9홀 (1~9)
   for (let i = 0; i < 9; i++) {
     const hData = frontCourse?.holes?.[i] || { hole: i + 1, par: 4 };
     holes.push(createEmptyHole(i + 1, frontCourse.name, hData.par));
   }
 
-  // 후반 9홀 (10~18)
   for (let i = 0; i < 9; i++) {
     const hData = backCourse?.holes?.[i] || { hole: i + 1, par: 4 };
     holes.push(createEmptyHole(i + 10, backCourse.name, hData.par));
@@ -170,26 +164,36 @@ function startRound() {
 }
 
 function createEmptyHole(holeNum, courseName, par) {
-  let defaultSecond = "7I";
-  let defaultThird = "온그린(생략)";
+  let defaultTee = "fw_center";
+  let defaultSecond = "8I";
+  let defaultThird = "PW";
+  let defaultApp = 0;
 
-  if (par === 4) {
-    defaultSecond = "8I"; // 파4 세컨 기본
+  if (par === 3) {
+    defaultTee = "green"; // 파3는 그린(온그린)이 기본
+    defaultSecond = "-";
+    defaultApp = 0;
+  } else if (par === 4) {
+    defaultTee = "fw_center";
+    defaultSecond = "8I";
+    defaultApp = 0;
   } else if (par === 5) {
-    defaultSecond = "우드"; // 파5 세컨 기본
-    defaultThird = "PW";    // 파5 서드 기본
-  } else if (par === 3) {
-    defaultSecond = "아이언";
+    defaultTee = "fw_center";
+    defaultSecond = "우드";
+    defaultThird = "PW";
+    defaultApp = 0;
   }
 
   return {
     holeNum,
     courseName,
     par,
-    teeResult: "fw_center",
+    teeResult: defaultTee, // green, fw_center, fw_left, fw_right, rough, hazard, ob
     secondClub: defaultSecond,
+    secondResult: "normal", // normal, hazard, ob
     thirdClub: defaultThird,
-    approachCount: 0,
+    thirdResult: "normal",  // normal, hazard, ob
+    approachCount: defaultApp,
     puttCount: 2,
     manualScoreAdjust: 0,
     memo: ""
@@ -208,26 +212,105 @@ function renderHoleView() {
   document.getElementById("btn-prev-hole").disabled = currentHoleIdx === 0;
   document.getElementById("btn-next-hole").innerText = currentHoleIdx === 17 ? "스코어카드 확인" : "다음 홀 ▶";
 
-  // 티샷 버튼 선택 상태 복원
-  document.querySelectorAll(".btn-shot-choice").forEach((btn) => {
-    btn.classList.toggle("selected", btn.dataset.type === hole.teeResult);
-  });
+  // 1. 티샷 버튼 렌더링 (파3 vs 파4/파5 분기)
+  renderTeeShotButtons(hole);
 
-  // 클럽 그리드 렌더링 (파4, 파5, 파3 맞춤)
-  renderDynamicClubGrids(hole);
+  // 2. 클럽 & 결과 선택 렌더링 (파3는 생략, 파4 세컨, 파5 세컨+서드)
+  renderClubAndResultSections(hole);
 
-  // 카운터 복원
+  // 3. 어프로치 & 퍼팅
   document.getElementById("val-approach").innerText = hole.approachCount || 0;
   document.getElementById("val-putt").innerText = hole.puttCount || 0;
 
-  // 메모
+  // 4. 메모
   document.getElementById("input-hole-memo").value = hole.memo || "";
 
   updateCalculatedScore();
 }
 
-// 사용자 요청에 맞춘 클럽 그리드 렌더링
-function renderDynamicClubGrids(hole) {
+function renderTeeShotButtons(hole) {
+  const container = document.getElementById("tee-shot-container");
+  container.innerHTML = "";
+
+  if (hole.par === 3) {
+    // 파3: 그린, 러프, 해저드, OB
+    const grid = document.createElement("div");
+    grid.className = "shot-type-grid par3-grid";
+
+    const par3Choices = [
+      { type: "green", label: "🟢 그린 (온그린)", cls: "green-choice" },
+      { type: "rough", label: "러프", cls: "" },
+      { type: "hazard", label: "해저드 (+1)", cls: "penalty-hz" },
+      { type: "ob", label: "OB (+2)", cls: "penalty-ob" }
+    ];
+
+    par3Choices.forEach((ch) => {
+      const btn = document.createElement("button");
+      btn.type = "button";
+      btn.className = `btn-shot-choice ${ch.cls} ${hole.teeResult === ch.type ? "selected" : ""}`;
+      btn.innerText = ch.label;
+      btn.onclick = () => {
+        hole.teeResult = ch.type;
+        // 그린이면 어프로치 0, 미스샷이면 어프로치 1회 자동 기본값
+        if (ch.type === "green") {
+          hole.approachCount = 0;
+        } else if (hole.approachCount === 0) {
+          hole.approachCount = 1;
+        }
+        document.getElementById("val-approach").innerText = hole.approachCount;
+        renderTeeShotButtons(hole);
+        updateCalculatedScore();
+        saveCurrentRound();
+      };
+      grid.appendChild(btn);
+    });
+    container.appendChild(grid);
+
+  } else {
+    // 파4, 파5: FW좌, FW중, FW우 / 러프, 해저드, OB
+    const grid1 = document.createElement("div");
+    grid1.className = "shot-type-grid";
+    [
+      { type: "fw_left", label: "FW (좌)" },
+      { type: "fw_center", label: "FW (중앙)" },
+      { type: "fw_right", label: "FW (우)" }
+    ].forEach((ch) => {
+      const btn = document.createElement("button");
+      btn.type = "button";
+      btn.className = `btn-shot-choice ${hole.teeResult === ch.type ? "selected" : ""}`;
+      btn.innerText = ch.label;
+      btn.onclick = () => selectTeeResult(hole, ch.type);
+      grid1.appendChild(btn);
+    });
+
+    const grid2 = document.createElement("div");
+    grid2.className = "shot-type-grid";
+    [
+      { type: "rough", label: "러프", cls: "" },
+      { type: "hazard", label: "해저드 (+1)", cls: "penalty-hz" },
+      { type: "ob", label: "OB (+2)", cls: "penalty-ob" }
+    ].forEach((ch) => {
+      const btn = document.createElement("button");
+      btn.type = "button";
+      btn.className = `btn-shot-choice ${ch.cls} ${hole.teeResult === ch.type ? "selected" : ""}`;
+      btn.innerText = ch.label;
+      btn.onclick = () => selectTeeResult(hole, ch.type);
+      grid2.appendChild(btn);
+    });
+
+    container.appendChild(grid1);
+    container.appendChild(grid2);
+  }
+}
+
+function selectTeeResult(hole, type) {
+  hole.teeResult = type;
+  renderTeeShotButtons(hole);
+  updateCalculatedScore();
+  saveCurrentRound();
+}
+
+function renderClubAndResultSections(hole) {
   const secondSec = document.getElementById("sec-second-club");
   const thirdSec = document.getElementById("sec-third-club");
   const secondTitle = document.getElementById("title-second-club");
@@ -237,12 +320,19 @@ function renderDynamicClubGrids(hole) {
   secondGrid.innerHTML = "";
   thirdGrid.innerHTML = "";
 
+  if (hole.par === 3) {
+    // 파3: 클럽 선택 완전 생략!
+    secondSec.style.display = "none";
+    thirdSec.style.display = "none";
+    return;
+  }
+
   if (hole.par === 4) {
-    // 파4: 세컨 클럽 순서 (8, 9, P, 48, 52, 56, 7, 6, 5, 유틸, 우드)
     secondSec.style.display = "block";
     thirdSec.style.display = "none";
-    secondTitle.innerText = "🏌️ 2. 세컨샷 클럽 (Par 4)";
+    secondTitle.innerText = "🏌️ 2. 세컨샷 클럽";
 
+    // 파4 클럽 순서 (8, 9, P, 48, 52, 56, 7, 6, 5, 유틸, 우드)
     PAR4_SECOND_CLUBS.forEach((club) => {
       const btn = document.createElement("button");
       btn.type = "button";
@@ -250,18 +340,21 @@ function renderDynamicClubGrids(hole) {
       btn.innerText = club;
       btn.onclick = () => {
         hole.secondClub = club;
-        renderDynamicClubGrids(hole);
+        renderClubAndResultSections(hole);
         saveCurrentRound();
       };
       secondGrid.appendChild(btn);
     });
 
+    // 세컨 결과 토글 (정상 / 해저드 / OB)
+    updateResultToggleBar("second", hole.secondResult || "normal");
+
   } else if (hole.par === 5) {
-    // 파5: 세컨 클럽 (우드, 유틸, 5, 6, 7, 8, 9, 웨지)
     secondSec.style.display = "block";
     thirdSec.style.display = "block";
     secondTitle.innerText = "🏌️ 2. 세컨샷 클럽 (Par 5)";
 
+    // 파5 세컨 클럽 (우드, 유틸, 5, 6, 7, 8, 9, 웨지)
     PAR5_SECOND_CLUBS.forEach((club) => {
       const btn = document.createElement("button");
       btn.type = "button";
@@ -269,13 +362,14 @@ function renderDynamicClubGrids(hole) {
       btn.innerText = club;
       btn.onclick = () => {
         hole.secondClub = club;
-        renderDynamicClubGrids(hole);
+        renderClubAndResultSections(hole);
         saveCurrentRound();
       };
       secondGrid.appendChild(btn);
     });
+    updateResultToggleBar("second", hole.secondResult || "normal");
 
-    // 파5: 서드 클럽 (파4 세컨과 동일 순서)
+    // 파5 서드 클럽 (8, 9, P, 48, 52, 56, 7, 6, 5, 유틸, 우드, 온그린)
     PAR5_THIRD_CLUBS.forEach((club) => {
       const btn = document.createElement("button");
       btn.type = "button";
@@ -283,48 +377,62 @@ function renderDynamicClubGrids(hole) {
       btn.innerText = club;
       btn.onclick = () => {
         hole.thirdClub = club;
-        renderDynamicClubGrids(hole);
+        renderClubAndResultSections(hole);
         updateCalculatedScore();
         saveCurrentRound();
       };
       thirdGrid.appendChild(btn);
     });
-
-  } else {
-    // 파3: 티샷 온그린 또는 어프로치
-    secondSec.style.display = "block";
-    thirdSec.style.display = "none";
-    secondTitle.innerText = "🏌️ 2. 사용/어프로치 클럽 (Par 3)";
-
-    PAR3_CLUBS.forEach((club) => {
-      const btn = document.createElement("button");
-      btn.type = "button";
-      btn.className = `club-btn ${hole.secondClub === club ? "selected" : ""}`;
-      btn.innerText = club;
-      btn.onclick = () => {
-        hole.secondClub = club;
-        renderDynamicClubGrids(hole);
-        saveCurrentRound();
-      };
-      secondGrid.appendChild(btn);
-    });
+    updateResultToggleBar("third", hole.thirdResult || "normal");
   }
 }
 
-// 스코어 계산 공식
+function updateResultToggleBar(shotType, currentVal) {
+  const container = document.getElementById(`toggle-res-${shotType}`);
+  if (!container) return;
+
+  container.querySelectorAll(".btn-result-toggle").forEach((btn) => {
+    const val = btn.dataset.res;
+    btn.className = `btn-result-toggle ${val} ${val === currentVal ? "selected" : ""}`;
+  });
+}
+
+function setShotResult(shotType, val) {
+  if (!activeRound) return;
+  const hole = activeRound.holes[currentHoleIdx];
+
+  if (shotType === "second") {
+    hole.secondResult = val;
+  } else if (shotType === "third") {
+    hole.thirdResult = val;
+  }
+
+  updateResultToggleBar(shotType, val);
+  updateCalculatedScore();
+  saveCurrentRound();
+}
+
+// 스코어 계산 공식 (티샷, 세컨, 서드 벌타 완벽 반영)
 function calculateHoleScore(hole) {
   let strokes = 1; // 티샷 1타
 
-  // 벌타
+  // 티샷 벌타
   if (hole.teeResult === "ob") strokes += 2;
   else if (hole.teeResult === "hazard") strokes += 1;
 
   if (hole.par === 4) {
     strokes += 1; // 세컨 1타
+    if (hole.secondResult === "ob") strokes += 2;
+    else if (hole.secondResult === "hazard") strokes += 1;
   } else if (hole.par === 5) {
     strokes += 1; // 세컨 1타
+    if (hole.secondResult === "ob") strokes += 2;
+    else if (hole.secondResult === "hazard") strokes += 1;
+
     if (hole.thirdClub && hole.thirdClub !== "온그린(생략)") {
       strokes += 1; // 서드샷 1타
+      if (hole.thirdResult === "ob") strokes += 2;
+      else if (hole.thirdResult === "hazard") strokes += 1;
     }
   }
 
@@ -360,10 +468,18 @@ function updateCalculatedScore() {
   badge.innerText = name;
 
   // GIR 판정
-  const shotsToGreen = totalScore - hole.puttCount;
-  const isGIR = shotsToGreen <= (hole.par - 2) && hole.puttCount >= 1;
-  const girBadge = document.getElementById("disp-gir-badge");
+  let isGIR = false;
+  if (hole.par === 3) {
+    isGIR = (hole.teeResult === "green" && (hole.approachCount || 0) === 0);
+  } else if (hole.par === 4) {
+    const hasPenalty = (hole.teeResult === "ob" || hole.teeResult === "hazard" || hole.secondResult === "ob" || hole.secondResult === "hazard");
+    isGIR = !hasPenalty && (hole.approachCount || 0) === 0 && (hole.puttCount >= 1);
+  } else if (hole.par === 5) {
+    const hasPenalty = (hole.teeResult === "ob" || hole.teeResult === "hazard" || hole.secondResult === "ob" || hole.secondResult === "hazard" || hole.thirdResult === "ob" || hole.thirdResult === "hazard");
+    isGIR = !hasPenalty && (hole.approachCount || 0) === 0 && (hole.puttCount >= 1);
+  }
 
+  const girBadge = document.getElementById("disp-gir-badge");
   if (isGIR) {
     girBadge.innerText = "GIR 성공 (파온)";
     girBadge.className = "gir-badge";
@@ -374,16 +490,6 @@ function updateCalculatedScore() {
 }
 
 // 4. Hole Controls Action
-function setTeeResult(type) {
-  if (!activeRound) return;
-  activeRound.holes[currentHoleIdx].teeResult = type;
-  document.querySelectorAll(".btn-shot-choice").forEach((b) => {
-    b.classList.toggle("selected", b.dataset.type === type);
-  });
-  updateCalculatedScore();
-  saveCurrentRound();
-}
-
 function changeApproach(delta) {
   if (!activeRound) return;
   const hole = activeRound.holes[currentHoleIdx];
@@ -443,7 +549,7 @@ function saveHoleMemo() {
   saveCurrentRound();
 }
 
-// 5. Scorecard & Quick Edit
+// 5. Scorecard
 function renderScorecard() {
   if (!activeRound) return;
 
@@ -461,26 +567,40 @@ function renderScorecard() {
     const score = calculateHoleScore(h);
     const tr = document.createElement("tr");
     tr.className = "clickable";
-    tr.onclick = () => jumpToHole(idx); // 클릭하면 해당 홀 기록창으로 이동해서 바로 수정 가능!
+    tr.onclick = () => jumpToHole(idx);
 
     let teeLabel = "FW";
-    if (h.teeResult === "rough") teeLabel = "러프";
-    else if (h.teeResult === "hazard") teeLabel = "해저드";
-    else if (h.teeResult === "ob") teeLabel = "OB";
-    else if (h.teeResult === "fw_left") teeLabel = "FW(좌)";
-    else if (h.teeResult === "fw_right") teeLabel = "FW(우)";
+    if (h.par === 3) {
+      if (h.teeResult === "green") teeLabel = "그린";
+      else if (h.teeResult === "rough") teeLabel = "러프";
+      else if (h.teeResult === "hazard") teeLabel = "해저드";
+      else if (h.teeResult === "ob") teeLabel = "OB";
+    } else {
+      if (h.teeResult === "rough") teeLabel = "러프";
+      else if (h.teeResult === "hazard") teeLabel = "해저드";
+      else if (h.teeResult === "ob") teeLabel = "OB";
+      else if (h.teeResult === "fw_left") teeLabel = "FW(좌)";
+      else if (h.teeResult === "fw_right") teeLabel = "FW(우)";
+    }
 
     let clubSummary = h.secondClub || "-";
-    if (h.par === 5 && h.thirdClub && h.thirdClub !== "온그린(생략)") {
-      clubSummary += ` / ${h.thirdClub}`;
+    if (h.par === 3) {
+      clubSummary = "-";
+    } else if (h.par === 5 && h.thirdClub && h.thirdClub !== "온그린(생략)") {
+      clubSummary += `/${h.thirdClub}`;
     }
+
+    // 벌타 표시
+    let penaltyTag = "";
+    if (h.secondResult === "ob" || h.thirdResult === "ob") penaltyTag = " (OB)";
+    else if (h.secondResult === "hazard" || h.thirdResult === "hazard") penaltyTag = " (HZ)";
 
     tr.innerHTML = `
       <td><strong>${h.holeNum}</strong></td>
       <td>${h.par}</td>
       <td style="color:${getScoreColor(score - h.par)}; font-weight:800; font-size:14px;">${score}</td>
       <td>${teeLabel}</td>
-      <td>${clubSummary}</td>
+      <td>${clubSummary}${penaltyTag}</td>
       <td>${h.puttCount}</td>
     `;
 
@@ -545,15 +665,25 @@ function renderStatsView() {
       }
     }
 
-    const shotsToGreen = sc - h.puttCount;
-    if (shotsToGreen <= (h.par - 2) && h.puttCount >= 1) {
+    // GIR
+    if (h.par === 3 && h.teeResult === "green" && (h.approachCount || 0) === 0) {
       girHits++;
+    } else if (h.par > 3) {
+      const shotsToGreen = sc - h.puttCount;
+      if (shotsToGreen <= (h.par - 2) && h.puttCount >= 1) {
+        girHits++;
+      }
     }
 
+    // 벌타 카운트 (티샷, 세컨, 서드)
     if (h.teeResult === "ob") obCount++;
     if (h.teeResult === "hazard") hzCount++;
+    if (h.secondResult === "ob") obCount++;
+    if (h.secondResult === "hazard") hzCount++;
+    if (h.thirdResult === "ob") obCount++;
+    if (h.thirdResult === "hazard") hzCount++;
 
-    if (h.secondClub && h.secondClub !== "온그린(생략)") {
+    if (h.par > 3 && h.secondClub && h.secondClub !== "-") {
       clubUsage[h.secondClub] = (clubUsage[h.secondClub] || 0) + 1;
     }
     if (h.par === 5 && h.thirdClub && h.thirdClub !== "온그린(생략)") {
@@ -588,7 +718,7 @@ function renderStatsView() {
   });
 }
 
-// 7. History (끝나고 스코어 기록 및 지난 라운드 보관함)
+// 7. History
 function renderHistoryView() {
   const container = document.getElementById("history-list-container");
   container.innerHTML = "";
@@ -610,7 +740,7 @@ function renderHistoryView() {
     return;
   }
 
-  list.forEach((rd, idx) => {
+  list.forEach((rd) => {
     let totScore = 0;
     rd.holes.forEach((h) => { totScore += calculateHoleScore(h); });
 
@@ -658,7 +788,6 @@ function archiveActiveRound(round) {
   if (hist) {
     try { list = JSON.parse(hist); } catch (e) {}
   }
-  // 같은 id가 있으면 교체, 없으면 맨 앞에 추가
   const existingIdx = list.findIndex((r) => r.id === round.id);
   if (existingIdx >= 0) {
     list[existingIdx] = round;
@@ -719,7 +848,7 @@ function saveNewCourseFromModal() {
   alert(`${name} 골프장이 성공적으로 추가되었습니다!`);
 }
 
-// 9. Navigation & View Switcher
+// 9. Navigation & Local Storage
 function showView(viewId) {
   document.querySelectorAll(".view-section").forEach((sec) => sec.classList.remove("active"));
   const target = document.getElementById(viewId);
@@ -759,7 +888,6 @@ function setupEventListeners() {
   document.getElementById("course-select").addEventListener("change", onCourseChange);
   document.getElementById("btn-start-round").addEventListener("click", startRound);
 
-  // Bottom Tabs
   document.querySelectorAll(".tab-btn").forEach((btn) => {
     btn.addEventListener("click", () => {
       const v = btn.dataset.view;

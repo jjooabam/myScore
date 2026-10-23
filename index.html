@@ -13,7 +13,7 @@
   <link rel="manifest" href="manifest.json">
   <link rel="apple-touch-icon" href="icon-192.png">
 
-  <link rel="stylesheet" href="style.css?v=2">
+  <link rel="stylesheet" href="style.css?v=3">
 </head>
 <body>
 
@@ -22,12 +22,12 @@
     <div class="header-title-box">
       <div class="logo-badge">⛳</div>
       <div>
-        <div class="header-title">MY GOLF NOTE <span style="font-size:11px; background:#10b981; color:white; padding:1px 5px; border-radius:4px; vertical-align:middle;">v2</span></div>
+        <div class="header-title">MY GOLF NOTE <span style="font-size:11px; background:#10b981; color:white; padding:1px 5px; border-radius:4px; vertical-align:middle;">v3</span></div>
         <div class="header-subtitle">스마트 스코어 트래커</div>
       </div>
     </div>
     <div style="display:flex; gap:6px; align-items:center;">
-      <button onclick="forceUpdateApp()" style="font-size:11px; padding:4px 8px; border-radius:12px; background:#334155; color:#cbd5e1; border:1px solid #475569; cursor:pointer;" title="앱 최신버전 강제 새로고침">🔄 갱신</button>
+      <button onclick="forceUpdateApp()" style="font-size:11px; padding:4px 8px; border-radius:12px; background:#334155; color:#cbd5e1; border:1px solid #475569; cursor:pointer;" title="최신버전 갱신">🔄 갱신</button>
       <div id="gps-status" class="gps-badge" title="클릭하여 GPS 재수신">
         📡 GPS
       </div>
@@ -76,8 +76,9 @@
       <div class="card" style="background: rgba(30,41,59,0.4);">
         <h3 style="font-size: 13px; font-weight: 700; margin-bottom: 6px; color: #cbd5e1;">💡 편리한 사용 안내</h3>
         <p style="font-size: 12px; color: var(--text-muted); line-height: 1.6;">
-          • <strong>라운드가 끝난 후 기록할 때</strong>: 날짜를 선택하고 시작한 뒤, 스코어카드 화면에서 각 홀을 누르면 빠르게 스코어를 채워넣을 수 있습니다.<br>
-          • <strong>홈 화면에 추가</strong>: 사파리 하단 공유 버튼 ➔ [홈 화면에 추가]를 누르면 진짜 앱처럼 설치됩니다.
+          • <strong>파3 홀</strong>: 티샷이 [그린/러프/해저드/OB]로 자동 전환되며 불필요한 클럽 선택 없이 간결하게 입력됩니다.<br>
+          • <strong>세컨/서드 벌타</strong>: 세컨샷이나 서드샷에서 해저드/OB가 난 경우에도 해당 버튼만 누르면 벌타가 자동 계산됩니다.<br>
+          • <strong>라운드 종료 후 기록</strong>: 스코어카드 화면에서 홀 번호를 누르면 빠르게 수정 입력이 가능합니다.
         </p>
       </div>
     </section>
@@ -118,26 +119,29 @@
         </div>
       </div>
 
-      <!-- 1. Tee Shot Result -->
+      <!-- 1. Tee Shot Result (Dynamic: Par3 vs Par4/5) -->
       <div class="card">
         <div class="label-title">🎯 1. 티샷 결과</div>
-        <div class="shot-type-grid">
-          <button type="button" class="btn-shot-choice" data-type="fw_left" onclick="setTeeResult('fw_left')">FW (좌)</button>
-          <button type="button" class="btn-shot-choice" data-type="fw_center" onclick="setTeeResult('fw_center')">FW (중앙)</button>
-          <button type="button" class="btn-shot-choice" data-type="fw_right" onclick="setTeeResult('fw_right')">FW (우)</button>
-        </div>
-        <div class="shot-type-grid">
-          <button type="button" class="btn-shot-choice" data-type="rough" onclick="setTeeResult('rough')">러프</button>
-          <button type="button" class="btn-shot-choice penalty-hz" data-type="hazard" onclick="setTeeResult('hazard')">해저드(+1)</button>
-          <button type="button" class="btn-shot-choice penalty-ob" data-type="ob" onclick="setTeeResult('ob')">OB(+2)</button>
+        <div id="tee-shot-container">
+          <!-- Populated dynamically via renderTeeShotButtons -->
         </div>
       </div>
 
-      <!-- 2. Second Shot Club (One-page Grid) -->
+      <!-- 2. Second Shot Club (Par 4, Par 5) -->
       <div class="card" id="sec-second-club">
         <div class="label-title" id="title-second-club">🏌️ 2. 세컨샷 클럽</div>
         <div id="grid-second-club" class="club-grid">
           <!-- Dynamic Buttons -->
+        </div>
+
+        <!-- Second Shot Penalty Toggle -->
+        <div style="margin-top: 8px;">
+          <div style="font-size: 12px; color: var(--text-muted); margin-bottom: 4px;">세컨샷 결과 상태</div>
+          <div id="toggle-res-second" class="shot-result-bar">
+            <button type="button" class="btn-result-toggle normal selected" data-res="normal" onclick="setShotResult('second', 'normal')">정상 (페어웨이/러프)</button>
+            <button type="button" class="btn-result-toggle hazard" data-res="hazard" onclick="setShotResult('second', 'hazard')">해저드 (+1)</button>
+            <button type="button" class="btn-result-toggle ob" data-res="ob" onclick="setShotResult('second', 'ob')">OB (+2)</button>
+          </div>
         </div>
       </div>
 
@@ -145,7 +149,17 @@
       <div class="card" id="sec-third-club" style="display: none;">
         <div class="label-title">🏌️ 3. 서드샷 클럽 (Par 5 온그린)</div>
         <div id="grid-third-club" class="club-grid">
-          <!-- Dynamic Buttons for Par 5 Third -->
+          <!-- Dynamic Buttons -->
+        </div>
+
+        <!-- Third Shot Penalty Toggle -->
+        <div style="margin-top: 8px;">
+          <div style="font-size: 12px; color: var(--text-muted); margin-bottom: 4px;">서드샷 결과 상태</div>
+          <div id="toggle-res-third" class="shot-result-bar">
+            <button type="button" class="btn-result-toggle normal selected" data-res="normal" onclick="setShotResult('third', 'normal')">정상 (온그린/주변)</button>
+            <button type="button" class="btn-result-toggle hazard" data-res="hazard" onclick="setShotResult('third', 'hazard')">해저드 (+1)</button>
+            <button type="button" class="btn-result-toggle ob" data-res="ob" onclick="setShotResult('third', 'ob')">OB (+2)</button>
+          </div>
         </div>
       </div>
 
@@ -268,7 +282,7 @@
         </div>
 
         <div class="stat-item" style="margin-bottom: 14px; text-align: left; padding: 12px 16px;">
-          <div class="stat-desc">벌타 발생 통계</div>
+          <div class="stat-desc">벌타 발생 통계 (티샷+세컨+서드)</div>
           <div id="stat-penalty" style="font-size: 14px; font-weight: 700; color: #f87171; margin-top: 4px;">OB 0회 / 해저드 0회</div>
         </div>
 
@@ -376,8 +390,8 @@
     </button>
   </nav>
 
-  <script src="courses.js?v=2"></script>
-  <script src="app.js?v=2"></script>
+  <script src="courses.js?v=3"></script>
+  <script src="app.js?v=3"></script>
   <script>
     function forceUpdateApp() {
       if (confirm("최신 업데이트를 반영하기 위해 캐시를 갱신하고 새로고침하시겠습니까?")) {
@@ -393,7 +407,7 @@
 
     if ('serviceWorker' in navigator) {
       window.addEventListener('load', () => {
-        navigator.serviceWorker.register('sw.js?v=2')
+        navigator.serviceWorker.register('sw.js?v=3')
           .then((reg) => {
             reg.update();
           })
