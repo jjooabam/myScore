@@ -19,23 +19,28 @@ try {
     auth = firebase.auth();
     db = firebase.firestore();
 
-    // 1. 리다이렉트 복귀 결과 처리
+    // 로컬 지속성 설정 (항상 로그인 유지)
+    auth.setPersistence(firebase.auth.Auth.Persistence.LOCAL).catch((err) => {
+      console.warn("Persistence setting error:", err);
+    });
+
+    // 1. 리다이렉트 로그인 결과 확인
     auth.getRedirectResult()
       .then((result) => {
         if (result && result.user) {
           currentUser = result.user;
           updateAuthUI(result.user);
           loadCloudRounds();
-          alert(`🎉 구글 로그인 성공! 환영합니다, ${result.user.displayName || "골퍼"}님.`);
+          alert(`🎉 구글 로그인 성공!\n반갑습니다, ${result.user.displayName || result.user.email}님.`);
         }
       })
       .catch((error) => {
-        if (error.code !== "auth/null-user") {
-          console.warn("Redirect result notice:", error);
+        if (error.code && error.code !== "auth/null-user") {
+          alert(`⚠️ 로그인 리다이렉트 오류:\n[${error.code}] ${error.message}`);
         }
       });
 
-    // 2. 인증 상태 실시간 감시
+    // 2. 인증 상태 실시간 감시 (로그인/로그아웃 즉시 반영)
     auth.onAuthStateChanged((user) => {
       currentUser = user;
       updateAuthUI(user);
@@ -49,7 +54,7 @@ try {
   console.error("Firebase init error:", e);
 }
 
-// Google Login: 모바일 Safari ITP 쿠키 차단 우회를 위해 Popup 우선 방식 사용
+// Google Login
 function loginWithGoogle() {
   if (!auth) {
     alert("Firebase 서비스 준비 중입니다. 잠시 후 다시 눌러주세요.");
@@ -62,32 +67,33 @@ function loginWithGoogle() {
   const btn = document.querySelector("#auth-header-box button");
   if (btn) btn.innerText = "연결중...";
 
-  // signInWithPopup 시도
   auth.signInWithPopup(provider)
     .then((result) => {
-      currentUser = result.user;
-      updateAuthUI(result.user);
-      loadCloudRounds();
-      alert(`🎉 구글 로그인 성공! 환영합니다, ${result.user.displayName || "골퍼"}님.`);
+      if (result && result.user) {
+        currentUser = result.user;
+        updateAuthUI(result.user);
+        loadCloudRounds();
+        alert(`🎉 구글 로그인 성공!\n환영합니다, ${result.user.displayName || result.user.email}님.`);
+      }
     })
     .catch((error) => {
       console.warn("Popup error:", error.code, error.message);
       if (error.code === "auth/popup-blocked" || error.code === "auth/popup-closed-by-user") {
-        // 팝업이 차단된 경우 사용자 동의 하에 리다이렉트 시도
-        if (confirm("사파리 팝업이 차단되었습니다. 로그인 페이지로 이동하여 로그인하시겠습니까?")) {
+        if (confirm("사파리 팝업이 차단되었거나 닫혔습니다.\n로그인 전용 페이지로 이동(리다이렉트)하여 로그인하시겠습니까?")) {
           auth.signInWithRedirect(provider);
         } else {
           updateAuthUI(currentUser);
         }
       } else {
-        handleAuthError(error);
+        alert(`❌ 구글 로그인 실패:\n[${error.code}]\n${error.message}`);
+        updateAuthUI(currentUser);
       }
     });
 }
 
-// 대안: 팝업/리다이렉트 없이 0.1초 만에 클라우드 즉시 연결
+// ⚡ 닉네임 원클릭 클라우드 연결 (팝업/동의창 0.1초 통과)
 function loginQuickGuest() {
-  const nick = prompt("클라우드에 저장할 닉네임을 입력해주세요 (예: 김골퍼):", "골퍼");
+  const nick = prompt("클라우드에 저장할 닉네임을 입력해주세요 (예: 김골퍼):", currentUser?.displayName || "골퍼");
   if (!nick) return;
 
   auth.signInAnonymously()
@@ -101,22 +107,8 @@ function loginQuickGuest() {
       alert(`🎉 '${nick}'님으로 클라우드에 연결되었습니다!\n이제 기록이 평생 안전하게 영구 저장됩니다.`);
     })
     .catch((err) => {
-      handleAuthError(err);
+      alert(`❌ 간편 연결 실패:\n[${err.code}]\n${err.message}`);
     });
-}
-
-function handleAuthError(error) {
-  console.error("Auth Error:", error);
-  let msg = error.message;
-
-  if (error.code === "auth/operation-not-allowed") {
-    msg = "Firebase 콘솔에서 [Google 로그인] 또는 [익명 로그인] 스위치가 꺼져 있습니다.\nAuthentication -> 로그인 제공업체 활성화를 확인해주세요.";
-  } else if (error.code === "auth/unauthorized-domain") {
-    msg = "Firebase 콘솔의 [승인된 도메인]에 jjooabam.github.io 가 등록되지 않았습니다.";
-  }
-
-  alert("로그인 안내: " + msg);
-  updateAuthUI(currentUser);
 }
 
 function logoutUser() {
@@ -129,13 +121,13 @@ function logoutUser() {
   }
 }
 
-// 3. UI Update
+// 3. UI Header Update
 function updateAuthUI(user) {
   const container = document.getElementById("auth-header-box");
   const cloudBadge = document.getElementById("cloud-sync-status");
   if (!container) return;
 
-  if (user) {
+  if (user && (user.displayName || user.email || user.isAnonymous)) {
     const name = user.displayName || user.email || "골퍼";
     container.innerHTML = `
       <div onclick="logoutUser()" style="display:flex; align-items:center; gap:4px; cursor:pointer; background:#1e293b; padding:4px 8px; border-radius:12px; border:1px solid #10b981;">
@@ -147,16 +139,22 @@ function updateAuthUI(user) {
       cloudBadge.style.color = "#34d399";
     }
   } else {
+    // 미로그인 시: 구글 로그인 버튼 + ⚡ 닉네임 연결 버튼 2개 제공
     container.innerHTML = `
-      <button onclick="loginWithGoogle()" style="font-size:11px; padding:4px 8px; border-radius:10px; background:#2563eb; color:white; border:none; font-weight:700; cursor:pointer;">
-        구글 로그인
-      </button>
+      <div style="display:flex; gap:4px;">
+        <button onclick="loginWithGoogle()" style="font-size:11px; padding:4px 7px; border-radius:10px; background:#2563eb; color:white; border:none; font-weight:700; cursor:pointer;" title="구글 계정으로 로그인">
+          구글 로그인
+        </button>
+        <button onclick="loginQuickGuest()" style="font-size:11px; padding:4px 7px; border-radius:10px; background:#10b981; color:white; border:none; font-weight:700; cursor:pointer;" title="닉네임만 넣고 1초 연결">
+          ⚡ 1초 연결
+        </button>
+      </div>
     `;
     if (cloudBadge) {
       cloudBadge.innerHTML = `
         <div style="color:#fbbf24; margin-bottom:4px;">⚠️ 미로그인 상태입니다. 캐시 삭제 시 기록이 지워질 수 있습니다.</div>
         <div style="display:flex; gap:8px;">
-          <a href="javascript:void(0)" onclick="loginWithGoogle()" style="color:#38bdf8; font-weight:700; text-decoration:underline;">구글로 로그인</a>
+          <a href="javascript:void(0)" onclick="loginWithGoogle()" style="color:#38bdf8; font-weight:700; text-decoration:underline;">구글 로그인</a>
           <span style="color:#64748b;">|</span>
           <a href="javascript:void(0)" onclick="loginQuickGuest()" style="color:#34d399; font-weight:700; text-decoration:underline;">⚡ 닉네임으로 1초 연결</a>
         </div>
