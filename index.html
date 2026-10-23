@@ -13,7 +13,7 @@
   <link rel="manifest" href="manifest.json">
   <link rel="apple-touch-icon" href="icon-192.png">
 
-  <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="style.css?v=2">
 </head>
 <body>
 
@@ -22,12 +22,15 @@
     <div class="header-title-box">
       <div class="logo-badge">⛳</div>
       <div>
-        <div class="header-title">MY GOLF NOTE</div>
+        <div class="header-title">MY GOLF NOTE <span style="font-size:11px; background:#10b981; color:white; padding:1px 5px; border-radius:4px; vertical-align:middle;">v2</span></div>
         <div class="header-subtitle">스마트 스코어 트래커</div>
       </div>
     </div>
-    <div id="gps-status" class="gps-badge" title="클릭하여 GPS 재수신">
-      📡 GPS 확인중
+    <div style="display:flex; gap:6px; align-items:center;">
+      <button onclick="forceUpdateApp()" style="font-size:11px; padding:4px 8px; border-radius:12px; background:#334155; color:#cbd5e1; border:1px solid #475569; cursor:pointer;" title="앱 최신버전 강제 새로고침">🔄 갱신</button>
+      <div id="gps-status" class="gps-badge" title="클릭하여 GPS 재수신">
+        📡 GPS
+      </div>
     </div>
   </header>
 
@@ -373,12 +376,28 @@
     </button>
   </nav>
 
-  <script src="courses.js"></script>
-  <script src="app.js"></script>
+  <script src="courses.js?v=2"></script>
+  <script src="app.js?v=2"></script>
   <script>
+    function forceUpdateApp() {
+      if (confirm("최신 업데이트를 반영하기 위해 캐시를 갱신하고 새로고침하시겠습니까?")) {
+        if ('caches' in window) {
+          caches.keys().then((names) => {
+            names.forEach((name) => caches.delete(name));
+          });
+        }
+        localStorage.removeItem("golf_active_round");
+        window.location.reload(true);
+      }
+    }
+
     if ('serviceWorker' in navigator) {
       window.addEventListener('load', () => {
-        navigator.serviceWorker.register('sw.js').catch((err) => console.log('SW reg fail:', err));
+        navigator.serviceWorker.register('sw.js?v=2')
+          .then((reg) => {
+            reg.update();
+          })
+          .catch((err) => console.log('SW reg fail:', err));
       });
     }
   </script>

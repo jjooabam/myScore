@@ -4,6 +4,8 @@ let activeRound = null;
 let currentHoleIdx = 0; // 0 to 17
 let userCoords = null;
 
+console.log("⛳ Golf Score Tracker App v2.0 Loaded!");
+
 // Initialize
 document.addEventListener("DOMContentLoaded", () => {
   allCourses = getCourses();
