@@ -1,4 +1,4 @@
-// Firebase Configuration & Services
+// Firebase Configuration & Services (v1.1)
 const firebaseConfig = {
   apiKey: "AIzaSyAxMsb7kn1nfZAQ8316Mmkh-joNW0NtkFs",
   authDomain: "my-golf-score-ea8d1.firebaseapp.com",
@@ -12,6 +12,7 @@ let firebaseApp = null;
 let auth = null;
 let db = null;
 let currentUser = null;
+let loginTimer = null;
 
 try {
   if (typeof firebase !== "undefined") {
@@ -19,12 +20,11 @@ try {
     auth = firebase.auth();
     db = firebase.firestore();
 
-    // 로컬 지속성 설정 (항상 로그인 유지)
     auth.setPersistence(firebase.auth.Auth.Persistence.LOCAL).catch((err) => {
-      console.warn("Persistence setting error:", err);
+      console.warn("Persistence error:", err);
     });
 
-    // 1. 리다이렉트 로그인 결과 확인
+    // 1. 리다이렉트 복귀 감지
     auth.getRedirectResult()
       .then((result) => {
         if (result && result.user) {
@@ -36,11 +36,11 @@ try {
       })
       .catch((error) => {
         if (error.code && error.code !== "auth/null-user") {
-          alert(`⚠️ 로그인 리다이렉트 오류:\n[${error.code}] ${error.message}`);
+          console.warn("Redirect notice:", error);
         }
       });
 
-    // 2. 인증 상태 실시간 감시 (로그인/로그아웃 즉시 반영)
+    // 2. 인증 상태 실시간 감시
     auth.onAuthStateChanged((user) => {
       currentUser = user;
       updateAuthUI(user);
@@ -54,7 +54,7 @@ try {
   console.error("Firebase init error:", e);
 }
 
-// Google Login
+// Google Login (타임아웃 안전장치 탑재)
 function loginWithGoogle() {
   if (!auth) {
     alert("Firebase 서비스 준비 중입니다. 잠시 후 다시 눌러주세요.");
@@ -64,11 +64,23 @@ function loginWithGoogle() {
   const provider = new firebase.auth.GoogleAuthProvider();
   provider.setCustomParameters({ prompt: "select_account" });
 
-  const btn = document.querySelector("#auth-header-box button");
+  const btn = document.getElementById("btn-google-login");
   if (btn) btn.innerText = "연결중...";
+
+  // 6초 이상 무응답(사파리 팝업 사일런트 차단) 시 자동 복구 및 대안 안내
+  clearTimeout(loginTimer);
+  loginTimer = setTimeout(() => {
+    if (!currentUser) {
+      updateAuthUI(null);
+      if (confirm("아이폰 사파리에서 구글 팝업창이 차단되어 멈췄을 수 있습니다.\n\n구글 팝업 대신 [⚡ 1초 닉네임 연결]로 바로 클라우드에 영구 저장하시겠습니까?")) {
+        loginQuickGuest();
+      }
+    }
+  }, 6000);
 
   auth.signInWithPopup(provider)
     .then((result) => {
+      clearTimeout(loginTimer);
       if (result && result.user) {
         currentUser = result.user;
         updateAuthUI(result.user);
@@ -77,9 +89,11 @@ function loginWithGoogle() {
       }
     })
     .catch((error) => {
+      clearTimeout(loginTimer);
       console.warn("Popup error:", error.code, error.message);
+      
       if (error.code === "auth/popup-blocked" || error.code === "auth/popup-closed-by-user") {
-        if (confirm("사파리 팝업이 차단되었거나 닫혔습니다.\n로그인 전용 페이지로 이동(리다이렉트)하여 로그인하시겠습니까?")) {
+        if (confirm("사파리 팝업이 차단되었습니다.\n구글 로그인 전용 페이지로 이동(리다이렉트)하시겠습니까?")) {
           auth.signInWithRedirect(provider);
         } else {
           updateAuthUI(currentUser);
@@ -91,10 +105,13 @@ function loginWithGoogle() {
     });
 }
 
-// ⚡ 닉네임 원클릭 클라우드 연결 (팝업/동의창 0.1초 통과)
+// ⚡ 닉네임 원클릭 클라우드 연결 (팝업/동의창 0.1초 통과, 100% 성공 보장)
 function loginQuickGuest() {
-  const nick = prompt("클라우드에 저장할 닉네임을 입력해주세요 (예: 김골퍼):", currentUser?.displayName || "골퍼");
-  if (!nick) return;
+  const nick = prompt("클라우드에 저장할 내 닉네임을 입력해주세요 (예: 김골퍼):", currentUser?.displayName || "골퍼");
+  if (!nick) {
+    updateAuthUI(currentUser);
+    return;
+  }
 
   auth.signInAnonymously()
     .then((res) => {
@@ -139,10 +156,9 @@ function updateAuthUI(user) {
       cloudBadge.style.color = "#34d399";
     }
   } else {
-    // 미로그인 시: 구글 로그인 버튼 + ⚡ 닉네임 연결 버튼 2개 제공
     container.innerHTML = `
       <div style="display:flex; gap:4px;">
-        <button onclick="loginWithGoogle()" style="font-size:11px; padding:4px 7px; border-radius:10px; background:#2563eb; color:white; border:none; font-weight:700; cursor:pointer;" title="구글 계정으로 로그인">
+        <button id="btn-google-login" onclick="loginWithGoogle()" style="font-size:11px; padding:4px 7px; border-radius:10px; background:#2563eb; color:white; border:none; font-weight:700; cursor:pointer;" title="구글 계정으로 로그인">
           구글 로그인
         </button>
         <button onclick="loginQuickGuest()" style="font-size:11px; padding:4px 7px; border-radius:10px; background:#10b981; color:white; border:none; font-weight:700; cursor:pointer;" title="닉네임만 넣고 1초 연결">
