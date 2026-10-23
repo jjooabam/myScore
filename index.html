@@ -1,0 +1,350 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <title>골프 스코어 - 나만의 라운드 기록기</title>
+
+  <!-- iOS PWA Meta Tags -->
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="골프스코어">
+  <meta name="theme-color" content="#0f172a">
+  <link rel="manifest" href="manifest.json">
+  <link rel="apple-touch-icon" href="icon-192.png">
+
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+  <!-- Top Header -->
+  <header>
+    <div class="header-title-box">
+      <div class="logo-badge">⛳</div>
+      <div>
+        <div class="header-title">MY GOLF NOTE</div>
+        <div class="header-subtitle">스마트 스코어 트래커</div>
+      </div>
+    </div>
+    <div id="gps-status" class="gps-badge" title="클릭하여 GPS 재수신">
+      📡 GPS 확인중
+    </div>
+  </header>
+
+  <!-- Main Views Area -->
+  <main>
+
+    <!-- 1. Round Setup View -->
+    <section id="setup-view" class="view-section active">
+      <div class="card">
+        <h2 style="font-size: 19px; font-weight: 700; margin-bottom: 6px;">🏌️ 새 라운드 시작</h2>
+        <p style="font-size: 13px; color: var(--text-muted); margin-bottom: 20px;">
+          GPS로 가장 가까운 골프장을 감지했거나 목록에서 선택하세요.
+        </p>
+
+        <div class="setup-group">
+          <label class="label-title">
+            <span>골프장 선택</span>
+            <a href="javascript:void(0)" onclick="openAddCourseModal()" style="color: var(--accent); font-size: 12px; text-decoration: none;">+ 새 골프장 추가</a>
+          </label>
+          <select id="course-select">
+            <option value="">-- 골프장 불러오는 중 --</option>
+          </select>
+        </div>
+
+        <div class="setup-group">
+          <label class="label-title">전반 (OUT) 코스</label>
+          <select id="front-course-select"></select>
+        </div>
+
+        <div class="setup-group">
+          <label class="label-title">후반 (IN) 코스</label>
+          <select id="back-course-select"></select>
+        </div>
+
+        <button id="btn-start-round" class="btn-start">라운드 시작하기 🚀</button>
+      </div>
+
+      <div class="card" style="background: rgba(30,41,59,0.5);">
+        <h3 style="font-size: 14px; font-weight: 600; margin-bottom: 8px; color: #cbd5e1;">💡 꿀팁 안내</h3>
+        <p style="font-size: 12px; color: var(--text-muted); line-height: 1.6;">
+          • 사파리 하단 <strong>공유 아이콘(네모+화살표)</strong> 누르고 <strong>'홈 화면에 추가'</strong>를 누르면 진짜 아이폰 앱처럼 전체화면으로 쓸 수 있습니다.<br>
+          • 골프장에 도착해 앱을 켜면 GPS로 골프장이 자동 선택됩니다.
+        </p>
+      </div>
+    </section>
+
+    <!-- 2. Hole Active Playing View -->
+    <section id="play-view" class="view-section">
+      <!-- Hole & Par Info -->
+      <div class="hole-header">
+        <div class="hole-indicator">
+          <span id="disp-hole-num" class="hole-num">1번 홀</span>
+          <span id="disp-hole-par" class="hole-par">PAR 4</span>
+        </div>
+        <div id="disp-course-name" class="hole-course-name">전반 코스</div>
+      </div>
+
+      <!-- Prev / Next Navigation -->
+      <div class="hole-nav-bar">
+        <button id="btn-prev-hole" class="btn-nav-hole" onclick="prevHole()">◀ 이전 홀</button>
+        <button id="btn-next-hole" class="btn-nav-hole" onclick="nextHole()">다음 홀 ▶</button>
+      </div>
+
+      <!-- Realtime Score & GIR Preview Bar -->
+      <div class="score-summary-bar">
+        <div>
+          <div style="font-size: 11px; color: var(--text-muted); margin-bottom: 4px;">예상 스코어</div>
+          <div class="total-strokes-box">
+            <span id="disp-total-score" class="total-number">4</span>
+            <span id="disp-score-name" class="score-name-badge">PAR</span>
+          </div>
+        </div>
+        <div style="text-align: right;">
+          <div style="font-size: 11px; color: var(--text-muted); margin-bottom: 4px;">타수 미세조정</div>
+          <div style="display:flex; gap:6px;">
+            <button onclick="adjustScore(-1)" style="padding:4px 10px; border-radius:6px; background:#334155; border:none; color:white; font-size:14px;">-1</button>
+            <button onclick="adjustScore(1)" style="padding:4px 10px; border-radius:6px; background:#334155; border:none; color:white; font-size:14px;">+1</button>
+          </div>
+          <div id="disp-gir-badge" class="gir-badge" style="margin-top:6px;">GIR 판정</div>
+        </div>
+      </div>
+
+      <!-- 1. Tee Shot Result -->
+      <div class="card">
+        <div class="label-title">🎯 1. 티샷 결과</div>
+        <div class="shot-type-grid">
+          <button type="button" class="btn-shot-choice" data-type="fw_left" onclick="setTeeResult('fw_left')">FW (좌)</button>
+          <button type="button" class="btn-shot-choice" data-type="fw_center" onclick="setTeeResult('fw_center')">FW (중앙)</button>
+          <button type="button" class="btn-shot-choice" data-type="fw_right" onclick="setTeeResult('fw_right')">FW (우)</button>
+        </div>
+        <div class="shot-type-grid">
+          <button type="button" class="btn-shot-choice" data-type="rough" onclick="setTeeResult('rough')">러프</button>
+          <button type="button" class="btn-shot-choice penalty-hz" data-type="hazard" onclick="setTeeResult('hazard')">해저드(+1)</button>
+          <button type="button" class="btn-shot-choice penalty-ob" data-type="ob" onclick="setTeeResult('ob')">OB(+2)</button>
+        </div>
+      </div>
+
+      <!-- 2. Second Shot Club -->
+      <div class="card">
+        <div class="label-title">🏌️ 2. 세컨샷 사용 클럽</div>
+        <div id="club-chips-container" class="club-scroll-container">
+          <!-- Club chips loaded dynamically -->
+        </div>
+      </div>
+
+      <!-- 3. Approach & Putt Counters -->
+      <div class="card">
+        <div class="setup-group">
+          <div class="counter-box">
+            <span class="counter-label">⛳ 어프로치 횟수</span>
+            <div class="counter-controls">
+              <button class="btn-count" onclick="changeApproach(-1)">−</button>
+              <span id="val-approach" class="count-value">0</span>
+              <button class="btn-count" onclick="changeApproach(1)">+</button>
+            </div>
+          </div>
+        </div>
+
+        <div>
+          <div class="counter-box">
+            <span class="counter-label">🎯 퍼팅 횟수</span>
+            <div class="counter-controls">
+              <button class="btn-count" onclick="changePutt(-1)">−</button>
+              <span id="val-putt" class="count-value">2</span>
+              <button class="btn-count" onclick="changePutt(1)">+</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 4. Hole Note / Memo -->
+      <div class="card">
+        <div class="label-title">📝 홀 복기 메모 (선택)</div>
+        <input type="text" id="input-hole-memo" placeholder="예: 슬라이스 바람 조심, 그린 좌측 흐름" onchange="saveHoleMemo()">
+      </div>
+    </section>
+
+    <!-- 3. Scorecard Table View -->
+    <section id="scorecard-view" class="view-section">
+      <div class="card">
+        <div style="display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 12px;">
+          <h2 style="font-size: 18px; font-weight: 700;">📋 스코어카드</h2>
+          <span id="sc-final-score" style="font-size: 18px; font-weight: 800; color: var(--accent);">0 타</span>
+        </div>
+        <div id="sc-round-title" style="font-size: 13px; color: var(--text-muted); margin-bottom: 14px;">-</div>
+
+        <!-- Front 9 Table -->
+        <div style="font-size: 13px; font-weight: 700; color: #93c5fd; margin-bottom: 6px;">전반 (OUT)</div>
+        <div class="score-table-wrap">
+          <table class="scorecard-table">
+            <thead>
+              <tr>
+                <th>홀</th><th>파</th><th>스코어</th><th>티샷</th><th>세컨</th><th>퍼트</th>
+              </tr>
+            </thead>
+            <tbody id="sc-front-tbody"></tbody>
+            <tfoot>
+              <tr class="total-row">
+                <td>전반</td>
+                <td id="sc-front-total-par">36</td>
+                <td id="sc-front-total-score">36</td>
+                <td>-</td>
+                <td>-</td>
+                <td id="sc-front-total-putt">18</td>
+              </tr>
+            </tfoot>
+          </table>
+        </div>
+
+        <!-- Back 9 Table -->
+        <div style="font-size: 13px; font-weight: 700; color: #93c5fd; margin-top: 14px; margin-bottom: 6px;">후반 (IN)</div>
+        <div class="score-table-wrap">
+          <table class="scorecard-table">
+            <thead>
+              <tr>
+                <th>홀</th><th>파</th><th>스코어</th><th>티샷</th><th>세컨</th><th>퍼트</th>
+              </tr>
+            </thead>
+            <tbody id="sc-back-tbody"></tbody>
+            <tfoot>
+              <tr class="total-row">
+                <td>후반</td>
+                <td id="sc-back-total-par">36</td>
+                <td id="sc-back-total-score">36</td>
+                <td>-</td>
+                <td>-</td>
+                <td id="sc-back-total-putt">18</td>
+              </tr>
+            </tfoot>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- 4. Round Statistics View -->
+    <section id="stats-view" class="view-section">
+      <div class="card">
+        <h2 style="font-size: 18px; font-weight: 700; margin-bottom: 14px;">📊 라운드 샷 분석 통계</h2>
+
+        <div class="stat-grid">
+          <div class="stat-item">
+            <div class="stat-desc">총 스코어 / 오버파</div>
+            <div id="stat-total-score" class="stat-val">72</div>
+            <div id="stat-diff" style="font-size: 13px; color: var(--text-muted); margin-top: 2px;">E</div>
+          </div>
+          <div class="stat-item">
+            <div class="stat-desc">페어웨이 안착률</div>
+            <div id="stat-fw-keep" class="stat-val">0%</div>
+          </div>
+          <div class="stat-item">
+            <div class="stat-desc">그린 적중률 (GIR)</div>
+            <div id="stat-gir" class="stat-val">0%</div>
+          </div>
+          <div class="stat-item">
+            <div class="stat-desc">총 퍼트 수</div>
+            <div id="stat-total-putts" class="stat-val">36</div>
+          </div>
+        </div>
+
+        <div class="stat-item" style="margin-bottom: 16px; text-align: left; padding: 14px 18px;">
+          <div class="stat-desc">벌타 발생 통계</div>
+          <div id="stat-penalty" style="font-size: 15px; font-weight: 700; color: #f87171; margin-top: 4px;">OB 0회 / 해저드 0회</div>
+        </div>
+
+        <h3 style="font-size: 14px; font-weight: 700; margin-bottom: 8px;">세컨샷 클럽 사용 빈도 TOP</h3>
+        <div id="stat-club-list" style="margin-bottom: 20px;"></div>
+
+        <button onclick="resetRound()" class="btn-start" style="background: linear-gradient(135deg, #ef4444, #b91c1c); box-shadow: 0 4px 14px rgba(239,68,68,0.3);">
+          라운드 종료 및 기록 보관
+        </button>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- Add Custom Course Modal -->
+  <div id="modal-add-course" class="modal-overlay">
+    <div class="modal-card">
+      <div class="modal-header">
+        <h3 style="font-size: 17px; font-weight: 700;">➕ 새 골프장 추가</h3>
+        <button class="btn-close" onclick="closeAddCourseModal()">✕</button>
+      </div>
+      <div class="setup-group">
+        <label class="label-title">골프장 명칭 *</label>
+        <input type="text" id="new-course-name" placeholder="예: 여주CC">
+      </div>
+      <div class="setup-group">
+        <label class="label-title">지역</label>
+        <input type="text" id="new-course-region" placeholder="예: 경기 여주">
+      </div>
+      <div class="setup-group" style="display:flex; gap:10px;">
+        <div style="flex:1;">
+          <label class="label-title">위도 (Lat)</label>
+          <input type="text" id="new-course-lat" placeholder="37.xxxx">
+        </div>
+        <div style="flex:1;">
+          <label class="label-title">경도 (Lng)</label>
+          <input type="text" id="new-course-lng" placeholder="127.xxxx">
+        </div>
+      </div>
+      <div class="setup-group">
+        <label class="label-title">전반 코스명</label>
+        <input type="text" id="new-course-sub1" placeholder="예: 에이스 코스">
+      </div>
+      <div class="setup-group">
+        <label class="label-title">후반 코스명</label>
+        <input type="text" id="new-course-sub2" placeholder="예: 드림 코스">
+      </div>
+      <button class="btn-start" onclick="saveNewCourseFromModal()">골프장 저장하기</button>
+    </div>
+  </div>
+
+  <!-- Bottom Fixed Navigation Tab -->
+  <nav class="tab-bar">
+    <button class="tab-btn active" data-view="setup-view">
+      <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <circle cx="12" cy="12" r="3"></circle>
+        <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
+      </svg>
+      <span>설정</span>
+    </button>
+    <button class="tab-btn" data-view="play-view">
+      <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"></path>
+        <line x1="4" y1="22" x2="4" y2="15"></line>
+      </svg>
+      <span>홀 기록</span>
+    </button>
+    <button class="tab-btn" data-view="scorecard-view">
+      <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+        <polyline points="14 2 14 8 20 8"></polyline>
+        <line x1="16" y1="13" x2="8" y2="13"></line>
+        <line x1="16" y1="17" x2="8" y2="17"></line>
+        <polyline points="10 9 9 9 8 9"></polyline>
+      </svg>
+      <span>스코어카드</span>
+    </button>
+    <button class="tab-btn" data-view="stats-view">
+      <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <line x1="18" y1="20" x2="18" y2="10"></line>
+        <line x1="12" y1="20" x2="12" y2="4"></line>
+        <line x1="6" y1="20" x2="6" y2="14"></line>
+      </svg>
+      <span>통계 분석</span>
+    </button>
+  </nav>
+
+  <script src="courses.js"></script>
+  <script src="app.js"></script>
+  <script>
+    // PWA Service Worker Registration
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('sw.js').catch((err) => console.log('SW reg fail:', err));
+      });
+    }
+  </script>
+</body>
+</html>
