@@ -1,11 +1,11 @@
-const CACHE_NAME = 'golf-score-v8';
+const CACHE_NAME = 'golf-score-v9';
 const ASSETS_TO_CACHE = [
   './',
   './index.html',
-  './style.css?v=8',
-  './firebase.js?v=8',
-  './courses.js?v=8',
-  './app.js?v=8',
+  './style.css?v=9',
+  './firebase.js?v=9',
+  './courses.js?v=9',
+  './app.js?v=9',
   './manifest.json',
   './icon-192.png',
   './icon-512.png'
