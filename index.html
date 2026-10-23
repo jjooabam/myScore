@@ -13,7 +13,7 @@
   <link rel="manifest" href="manifest.json">
   <link rel="apple-touch-icon" href="icon-192.png">
 
-  <link rel="stylesheet" href="style.css?v=3">
+  <link rel="stylesheet" href="style.css?v=4">
 </head>
 <body>
 
@@ -22,8 +22,8 @@
     <div class="header-title-box">
       <div class="logo-badge">⛳</div>
       <div>
-        <div class="header-title">MY GOLF NOTE <span style="font-size:11px; background:#10b981; color:white; padding:1px 5px; border-radius:4px; vertical-align:middle;">v3</span></div>
-        <div class="header-subtitle">스마트 스코어 트래커</div>
+        <div class="header-title">MY GOLF NOTE <span style="font-size:11px; background:#10b981; color:white; padding:1px 5px; border-radius:4px; vertical-align:middle;">v4</span></div>
+        <div class="header-subtitle">전국 골프장 스마트 트래커</div>
       </div>
     </div>
     <div style="display:flex; gap:6px; align-items:center;">
@@ -41,8 +41,8 @@
     <section id="setup-view" class="view-section active">
       <div class="card">
         <h2 style="font-size: 18px; font-weight: 700; margin-bottom: 6px;">🏌️ 새 라운드 시작</h2>
-        <p style="font-size: 13px; color: var(--text-muted); margin-bottom: 16px;">
-          실시간 기록 또는 라운드 종료 후 일괄 기록을 시작합니다.
+        <p style="font-size: 13px; color: var(--text-muted); margin-bottom: 14px;">
+          전국 주요 골프장을 검색하거나 GPS로 자동 선택하세요.
         </p>
 
         <div class="setup-group">
@@ -52,9 +52,11 @@
 
         <div class="setup-group">
           <label class="label-title">
-            <span>골프장 선택</span>
-            <a href="javascript:void(0)" onclick="openAddCourseModal()" style="color: var(--accent); font-size: 12px; text-decoration: none;">+ 새 골프장 추가</a>
+            <span>골프장 검색 & 선택</span>
+            <a href="javascript:void(0)" onclick="openAddCourseModal()" style="color: var(--accent); font-size: 12px; text-decoration: none;">+ 직접 추가</a>
           </label>
+          <!-- 실시간 골프장 검색 입력창 -->
+          <input type="text" id="course-search-input" placeholder="🔍 골프장 이름/지역 검색 (예: 여주, 춘천, 클럽72)" oninput="filterCourses()" style="margin-bottom: 8px;">
           <select id="course-select">
             <option value="">-- 골프장 불러오는 중 --</option>
           </select>
@@ -74,11 +76,11 @@
       </div>
 
       <div class="card" style="background: rgba(30,41,59,0.4);">
-        <h3 style="font-size: 13px; font-weight: 700; margin-bottom: 6px; color: #cbd5e1;">💡 편리한 사용 안내</h3>
+        <h3 style="font-size: 13px; font-weight: 700; margin-bottom: 6px; color: #cbd5e1;">💡 전국 골프장 지원 안내</h3>
         <p style="font-size: 12px; color: var(--text-muted); line-height: 1.6;">
-          • <strong>파3 홀</strong>: 티샷이 [그린/러프/해저드/OB]로 자동 전환되며 불필요한 클럽 선택 없이 간결하게 입력됩니다.<br>
-          • <strong>세컨/서드 벌타</strong>: 세컨샷이나 서드샷에서 해저드/OB가 난 경우에도 해당 버튼만 누르면 벌타가 자동 계산됩니다.<br>
-          • <strong>라운드 종료 후 기록</strong>: 스코어카드 화면에서 홀 번호를 누르면 빠르게 수정 입력이 가능합니다.
+          • <strong>전국 주요 골프장 탑재</strong>: 위 검색창에 '용인', '포천', '제주' 등을 치면 즉시 골프장이 필터링됩니다.<br>
+          • <strong>현장 원터치 파(Par) 변경</strong>: 라운드 중 홀 상단 <code>PAR 4 ▾</code>를 누르면 즉시 <code>PAR 3</code>, <code>PAR 5</code>로 1초 만에 변경할 수 있습니다.<br>
+          • <strong>GPS 자동 감지</strong>: 전국 어디서든 골프장에 도착해 앱을 켜면 가장 가까운 골프장이 자동 추천됩니다.
         </p>
       </div>
     </section>
@@ -87,9 +89,17 @@
     <section id="play-view" class="view-section">
       <!-- Hole & Par Info -->
       <div class="hole-header">
-        <div class="hole-indicator">
-          <span id="disp-hole-num" class="hole-num">1번 홀</span>
-          <span id="disp-hole-par" class="hole-par">PAR 4</span>
+        <div>
+          <div class="hole-indicator">
+            <span id="disp-hole-num" class="hole-num">1번 홀</span>
+            <span id="disp-hole-par" class="hole-par" onclick="toggleParSelector()" title="터치하여 파 변경">PAR 4 ▾</span>
+          </div>
+          <!-- 원터치 Par 변경 토글 바 -->
+          <div id="par-selector-wrap" class="par-selector-wrap">
+            <button type="button" class="btn-par-opt" data-par="3" onclick="changeHolePar(3)">PAR 3</button>
+            <button type="button" class="btn-par-opt" data-par="4" onclick="changeHolePar(4)">PAR 4</button>
+            <button type="button" class="btn-par-opt" data-par="5" onclick="changeHolePar(5)">PAR 5</button>
+          </div>
         </div>
         <div id="disp-course-name" class="hole-course-name">전반 코스</div>
       </div>
@@ -390,8 +400,8 @@
     </button>
   </nav>
 
-  <script src="courses.js?v=3"></script>
-  <script src="app.js?v=3"></script>
+  <script src="courses.js?v=4"></script>
+  <script src="app.js?v=4"></script>
   <script>
     function forceUpdateApp() {
       if (confirm("최신 업데이트를 반영하기 위해 캐시를 갱신하고 새로고침하시겠습니까?")) {
@@ -407,7 +417,7 @@
 
     if ('serviceWorker' in navigator) {
       window.addEventListener('load', () => {
-        navigator.serviceWorker.register('sw.js?v=3')
+        navigator.serviceWorker.register('sw.js?v=4')
           .then((reg) => {
             reg.update();
           })

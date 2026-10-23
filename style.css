@@ -209,9 +209,49 @@ select:focus, input:focus {
 }
 
 .hole-par {
-  font-size: 18px;
+  font-size: 16px;
   font-weight: 700;
   color: #cbd5e1;
+  background: #334155;
+  padding: 4px 8px;
+  border-radius: 8px;
+  cursor: pointer;
+  border: 1px solid var(--border);
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.hole-par:active {
+  background: var(--primary-dark);
+}
+
+/* Inline Par Selector */
+.par-selector-wrap {
+  display: none;
+  gap: 4px;
+  margin-top: 6px;
+}
+
+.par-selector-wrap.open {
+  display: flex;
+}
+
+.btn-par-opt {
+  padding: 6px 12px;
+  border-radius: 6px;
+  background: #0f172a;
+  border: 1px solid var(--border);
+  color: #cbd5e1;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.btn-par-opt.active {
+  background: var(--primary);
+  color: white;
+  border-color: var(--primary);
 }
 
 .hole-course-name {

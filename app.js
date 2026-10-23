@@ -76,17 +76,32 @@ function findNearestCourse(lat, lng) {
   }
 }
 
-// 2. Setup
-function initGolfCourseSelect() {
+// 2. Setup & Search
+function initGolfCourseSelect(filterQuery = "") {
   const select = document.getElementById("course-select");
-  select.innerHTML = '<option value="">-- 골프장 선택 --</option>';
+  select.innerHTML = '<option value="">-- 골프장 선택 (총 ' + allCourses.length + '개) --</option>';
 
-  allCourses.forEach((c) => {
+  const query = filterQuery.trim().toLowerCase();
+  const filtered = query
+    ? allCourses.filter((c) => c.name.toLowerCase().includes(query) || (c.region && c.region.toLowerCase().includes(query)))
+    : allCourses;
+
+  filtered.forEach((c) => {
     const opt = document.createElement("option");
     opt.value = c.id;
-    opt.innerText = `${c.name} (${c.region || "기본"})`;
+    opt.innerText = `${c.name} [${c.region || "기본"}]`;
     select.appendChild(opt);
   });
+
+  if (filtered.length === 1) {
+    select.selectedIndex = 1;
+    onCourseChange();
+  }
+}
+
+function filterCourses() {
+  const query = document.getElementById("course-search-input").value;
+  initGolfCourseSelect(query);
 }
 
 function onCourseChange() {
@@ -135,14 +150,16 @@ function startRound() {
   const dateFormatted = dateVal ? new Date(dateVal).toLocaleDateString("ko-KR", { year: "numeric", month: "long", day: "numeric", weekday: "short" }) : new Date().toLocaleDateString("ko-KR");
 
   const holes = [];
+  const fHoles = getCourseHolesOrDefault(frontCourse);
+  const bHoles = getCourseHolesOrDefault(backCourse);
 
   for (let i = 0; i < 9; i++) {
-    const hData = frontCourse?.holes?.[i] || { hole: i + 1, par: 4 };
+    const hData = fHoles[i] || { hole: i + 1, par: 4 };
     holes.push(createEmptyHole(i + 1, frontCourse.name, hData.par));
   }
 
   for (let i = 0; i < 9; i++) {
-    const hData = backCourse?.holes?.[i] || { hole: i + 1, par: 4 };
+    const hData = bHoles[i] || { hole: i + 1, par: 4 };
     holes.push(createEmptyHole(i + 10, backCourse.name, hData.par));
   }
 
@@ -201,13 +218,55 @@ function createEmptyHole(holeNum, courseName, par) {
 }
 
 // 3. Hole Recording Screen
-function renderHoleView() {
+// Par Selector Toggle & Change
+function toggleParSelector() {
+  const el = document.getElementById("par-selector-wrap");
+  if (el) {
+    el.classList.toggle("open");
+  }
+}
+
+function changeHolePar(newPar) {
+  if (!activeRound) return;
+  const hole = activeRound.holes[currentHoleIdx];
+  if (hole.par === newPar) {
+    toggleParSelector();
+    return;
+  }
+
+  hole.par = newPar;
+
+  // 파 변경에 따른 초기화
+  if (newPar === 3) {
+    hole.teeResult = "green";
+    hole.secondClub = "-";
+    hole.approachCount = 0;
+  } else if (newPar === 4) {
+    hole.teeResult = "fw_center";
+    hole.secondClub = "8I";
+    hole.approachCount = 0;
+  } else if (newPar === 5) {
+    hole.teeResult = "fw_center";
+    hole.secondClub = "우드";
+    hole.thirdClub = "PW";
+    hole.approachCount = 0;
+  }
+
+  toggleParSelector();
+  renderHoleView();
+  saveCurrentRound();
+}
   if (!activeRound) return;
   const hole = activeRound.holes[currentHoleIdx];
 
   document.getElementById("disp-hole-num").innerText = `${hole.holeNum}번 홀`;
-  document.getElementById("disp-hole-par").innerText = `PAR ${hole.par}`;
+  document.getElementById("disp-hole-par").innerHTML = `PAR ${hole.par} ▾`;
   document.getElementById("disp-course-name").innerText = hole.courseName;
+
+  // 파 선택기 활성화 상태 갱신
+  document.querySelectorAll(".btn-par-opt").forEach((btn) => {
+    btn.classList.toggle("active", parseInt(btn.dataset.par) === hole.par);
+  });
 
   document.getElementById("btn-prev-hole").disabled = currentHoleIdx === 0;
   document.getElementById("btn-next-hole").innerText = currentHoleIdx === 17 ? "스코어카드 확인" : "다음 홀 ▶";
