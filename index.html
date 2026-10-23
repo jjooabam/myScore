@@ -13,7 +13,7 @@
   <link rel="manifest" href="manifest.json">
   <link rel="apple-touch-icon" href="icon-192.png">
 
-  <link rel="stylesheet" href="style.css?v=8">
+  <link rel="stylesheet" href="style.css?v=9">
 </head>
 <body>
 
@@ -22,7 +22,7 @@
     <div class="header-title-box">
       <div class="logo-badge">⛳</div>
       <div>
-        <div class="header-title">MY GOLF NOTE <span style="font-size:11px; background:#10b981; color:white; padding:1px 5px; border-radius:4px; vertical-align:middle;">v8</span></div>
+        <div class="header-title">MY GOLF NOTE <span style="font-size:11px; background:#10b981; color:white; padding:1px 5px; border-radius:4px; vertical-align:middle;">v9</span></div>
         <div class="header-subtitle">전국 골프장 스마트 트래커</div>
       </div>
     </div>
@@ -408,9 +408,9 @@
   <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
-  <script src="firebase.js?v=8"></script>
-  <script src="courses.js?v=8"></script>
-  <script src="app.js?v=8"></script>
+  <script src="firebase.js?v=9"></script>
+  <script src="courses.js?v=9"></script>
+  <script src="app.js?v=9"></script>
   <script>
     function forceUpdateApp() {
       if (confirm("최신 업데이트를 반영하기 위해 캐시를 갱신하고 새로고침하시겠습니까?")) {
@@ -426,7 +426,7 @@
 
     if ('serviceWorker' in navigator) {
       window.addEventListener('load', () => {
-        navigator.serviceWorker.register('sw.js?v=8')
+        navigator.serviceWorker.register('sw.js?v=9')
           .then((reg) => {
             reg.update();
           })
