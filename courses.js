@@ -11,30 +11,18 @@ const DEFAULT_COURSES = [
         id: "peach",
         name: "피치 코스",
         holes: [
-          { hole: 1, par: 4 },
-          { hole: 2, par: 4 },
-          { hole: 3, par: 3 },
-          { hole: 4, par: 4 },
-          { hole: 5, par: 5 },
-          { hole: 6, par: 4 },
-          { hole: 7, par: 3 },
-          { hole: 8, par: 5 },
-          { hole: 9, par: 4 }
+          { hole: 1, par: 4 }, { hole: 2, par: 4 }, { hole: 3, par: 3 },
+          { hole: 4, par: 4 }, { hole: 5, par: 5 }, { hole: 6, par: 4 },
+          { hole: 7, par: 3 }, { hole: 8, par: 5 }, { hole: 9, par: 4 }
         ]
       },
       {
         id: "glen",
         name: "글렌 코스",
         holes: [
-          { hole: 1, par: 4 },
-          { hole: 2, par: 5 },
-          { hole: 3, par: 3 },
-          { hole: 4, par: 4 },
-          { hole: 5, par: 4 },
-          { hole: 6, par: 3 },
-          { hole: 7, par: 4 },
-          { hole: 8, par: 5 },
-          { hole: 9, par: 4 }
+          { hole: 1, par: 4 }, { hole: 2, par: 5 }, { hole: 3, par: 3 },
+          { hole: 4, par: 4 }, { hole: 5, par: 4 }, { hole: 6, par: 3 },
+          { hole: 7, par: 4 }, { hole: 8, par: 5 }, { hole: 9, par: 4 }
         ]
       }
     ]
@@ -50,30 +38,18 @@ const DEFAULT_COURSES = [
         id: "lake",
         name: "레이크 코스",
         holes: [
-          { hole: 1, par: 4 },
-          { hole: 2, par: 4 },
-          { hole: 3, par: 3 },
-          { hole: 4, par: 5 },
-          { hole: 5, par: 4 },
-          { hole: 6, par: 4 },
-          { hole: 7, par: 3 },
-          { hole: 8, par: 5 },
-          { hole: 9, par: 4 }
+          { hole: 1, par: 4 }, { hole: 2, par: 4 }, { hole: 3, par: 3 },
+          { hole: 4, par: 5 }, { hole: 5, par: 4 }, { hole: 6, par: 4 },
+          { hole: 7, par: 3 }, { hole: 8, par: 5 }, { hole: 9, par: 4 }
         ]
       },
       {
         id: "hill",
         name: "힐 코스",
         holes: [
-          { hole: 1, par: 4 },
-          { hole: 2, par: 5 },
-          { hole: 3, par: 3 },
-          { hole: 4, par: 4 },
-          { hole: 5, par: 4 },
-          { hole: 6, par: 3 },
-          { hole: 7, par: 5 },
-          { hole: 8, par: 4 },
-          { hole: 9, par: 4 }
+          { hole: 1, par: 4 }, { hole: 2, par: 5 }, { hole: 3, par: 3 },
+          { hole: 4, par: 4 }, { hole: 5, par: 4 }, { hole: 6, par: 3 },
+          { hole: 7, par: 5 }, { hole: 8, par: 4 }, { hole: 9, par: 4 }
         ]
       }
     ]
@@ -89,30 +65,18 @@ const DEFAULT_COURSES = [
         id: "sky",
         name: "하늘 코스",
         holes: [
-          { hole: 1, par: 4 },
-          { hole: 2, par: 4 },
-          { hole: 3, par: 3 },
-          { hole: 4, par: 5 },
-          { hole: 5, par: 4 },
-          { hole: 6, par: 4 },
-          { hole: 7, par: 3 },
-          { hole: 8, par: 4 },
-          { hole: 9, par: 5 }
+          { hole: 1, par: 4 }, { hole: 2, par: 4 }, { hole: 3, par: 3 },
+          { hole: 4, par: 5 }, { hole: 5, par: 4 }, { hole: 6, par: 4 },
+          { hole: 7, par: 3 }, { hole: 8, par: 4 }, { hole: 9, par: 5 }
         ]
       },
       {
         id: "nuri",
         name: "누리 코스",
         holes: [
-          { hole: 1, par: 4 },
-          { hole: 2, par: 5 },
-          { hole: 3, par: 3 },
-          { hole: 4, par: 4 },
-          { hole: 5, par: 4 },
-          { hole: 6, par: 3 },
-          { hole: 7, par: 4 },
-          { hole: 8, par: 5 },
-          { hole: 9, par: 4 }
+          { hole: 1, par: 4 }, { hole: 2, par: 5 }, { hole: 3, par: 3 },
+          { hole: 4, par: 4 }, { hole: 5, par: 4 }, { hole: 6, par: 3 },
+          { hole: 7, par: 4 }, { hole: 8, par: 5 }, { hole: 9, par: 4 }
         ]
       }
     ]
@@ -128,45 +92,27 @@ const DEFAULT_COURSES = [
         id: "rose",
         name: "로제 코스",
         holes: [
-          { hole: 1, par: 4 },
-          { hole: 2, par: 4 },
-          { hole: 3, par: 3 },
-          { hole: 4, par: 5 },
-          { hole: 5, par: 4 },
-          { hole: 6, par: 4 },
-          { hole: 7, par: 3 },
-          { hole: 8, par: 5 },
-          { hole: 9, par: 4 }
+          { hole: 1, par: 4 }, { hole: 2, par: 4 }, { hole: 3, par: 3 },
+          { hole: 4, par: 5 }, { hole: 5, par: 4 }, { hole: 6, par: 4 },
+          { hole: 7, par: 3 }, { hole: 8, par: 5 }, { hole: 9, par: 4 }
         ]
       },
       {
         id: "biang",
         name: "비앙 코스",
         holes: [
-          { hole: 1, par: 4 },
-          { hole: 2, par: 5 },
-          { hole: 3, par: 3 },
-          { hole: 4, par: 4 },
-          { hole: 5, par: 4 },
-          { hole: 6, par: 3 },
-          { hole: 7, par: 4 },
-          { hole: 8, par: 5 },
-          { hole: 9, par: 4 }
+          { hole: 1, par: 4 }, { hole: 2, par: 5 }, { hole: 3, par: 3 },
+          { hole: 4, par: 4 }, { hole: 5, par: 4 }, { hole: 6, par: 3 },
+          { hole: 7, par: 4 }, { hole: 8, par: 5 }, { hole: 9, par: 4 }
         ]
       },
       {
         id: "neo",
         name: "네오 코스",
         holes: [
-          { hole: 1, par: 4 },
-          { hole: 2, par: 3 },
-          { hole: 3, par: 5 },
-          { hole: 4, par: 4 },
-          { hole: 5, par: 4 },
-          { hole: 6, par: 3 },
-          { hole: 7, par: 5 },
-          { hole: 8, par: 4 },
-          { hole: 9, par: 4 }
+          { hole: 1, par: 4 }, { hole: 2, par: 3 }, { hole: 3, par: 5 },
+          { hole: 4, par: 4 }, { hole: 5, par: 4 }, { hole: 6, par: 3 },
+          { hole: 7, par: 5 }, { hole: 8, par: 4 }, { hole: 9, par: 4 }
         ]
       }
     ]
@@ -182,62 +128,47 @@ const DEFAULT_COURSES = [
         id: "silk",
         name: "실크 코스",
         holes: [
-          { hole: 1, par: 5 },
-          { hole: 2, par: 4 },
-          { hole: 3, par: 3 },
-          { hole: 4, par: 4 },
-          { hole: 5, par: 4 },
-          { hole: 6, par: 5 },
-          { hole: 7, par: 3 },
-          { hole: 8, par: 4 },
-          { hole: 9, par: 4 }
+          { hole: 1, par: 5 }, { hole: 2, par: 4 }, { hole: 3, par: 3 },
+          { hole: 4, par: 4 }, { hole: 5, par: 4 }, { hole: 6, par: 5 },
+          { hole: 7, par: 3 }, { hole: 8, par: 4 }, { hole: 9, par: 4 }
         ]
       },
       {
         id: "lake",
         name: "레이크 코스",
         holes: [
-          { hole: 1, par: 4 },
-          { hole: 2, par: 4 },
-          { hole: 3, par: 3 },
-          { hole: 4, par: 5 },
-          { hole: 5, par: 4 },
-          { hole: 6, par: 3 },
-          { hole: 7, par: 4 },
-          { hole: 8, par: 5 },
-          { hole: 9, par: 4 }
+          { hole: 1, par: 4 }, { hole: 2, par: 4 }, { hole: 3, par: 3 },
+          { hole: 4, par: 5 }, { hole: 5, par: 4 }, { hole: 6, par: 3 },
+          { hole: 7, par: 4 }, { hole: 8, par: 5 }, { hole: 9, par: 4 }
         ]
       },
       {
         id: "valley",
         name: "밸리 코스",
         holes: [
-          { hole: 1, par: 4 },
-          { hole: 2, par: 5 },
-          { hole: 3, par: 3 },
-          { hole: 4, par: 4 },
-          { hole: 5, par: 4 },
-          { hole: 6, par: 4 },
-          { hole: 7, par: 3 },
-          { hole: 8, par: 5 },
-          { hole: 9, par: 4 }
+          { hole: 1, par: 4 }, { hole: 2, par: 5 }, { hole: 3, par: 3 },
+          { hole: 4, par: 4 }, { hole: 5, par: 4 }, { hole: 6, par: 4 },
+          { hole: 7, par: 3 }, { hole: 8, par: 5 }, { hole: 9, par: 4 }
         ]
       }
     ]
   }
 ];
 
-// 클럽 기본 목록 (세컨샷 선택용)
-const DEFAULT_CLUBS = [
-  "드라이버", "3번 우드", "5번 우드",
-  "3번 유틸", "4번 유틸", "5번 유틸",
-  "4번 아이언", "5번 아이언", "6번 아이언",
-  "7번 아이언", "8번 아이언", "9번 아이언",
-  "PW(피칭)", "AW/GAP", "SW(샌드)", "LW(로브)",
-  "48도", "50도", "52도", "54도", "56도", "58도", "60도"
-];
+// 사용자 맞춤형 클럽 프리셋
+// 1. 파4 세컨 클럽 (8, 9, P, 48, 52, 56, 7, 6, 5, 유틸, 우드)
+const PAR4_SECOND_CLUBS = ["8I", "9I", "PW", "48°", "52°", "56°", "7I", "6I", "5I", "유틸", "우드"];
 
-// 로컬스토리지에서 골프장 목록 가져오기 (커스텀 추가 골프장 포함)
+// 2. 파5 세컨 클럽 (우드, 유틸, 5, 6, 7, 8, 9, 웨지)
+const PAR5_SECOND_CLUBS = ["우드", "유틸", "5I", "6I", "7I", "8I", "9I", "웨지"];
+
+// 3. 파5 서드 클럽 (파4 세컨과 동일한 순서)
+const PAR5_THIRD_CLUBS = ["8I", "9I", "PW", "48°", "52°", "56°", "7I", "6I", "5I", "유틸", "우드", "온그린(생략)"];
+
+// 4. 파3 티/어프로치 보조 클럽
+const PAR3_CLUBS = ["아이언", "유틸", "우드", "웨지", "온그린(생략)"];
+
+// 로컬스토리지에서 골프장 목록 가져오기
 function getCourses() {
   const custom = localStorage.getItem("golf_custom_courses");
   if (custom) {
@@ -264,7 +195,7 @@ function saveCustomCourse(newCourse) {
 
 // 거리 계산 (Haversine 공식, km 단위)
 function calculateDistance(lat1, lon1, lat2, lon2) {
-  const R = 6371; // 지구 반지름 (km)
+  const R = 6371;
   const dLat = (lat2 - lat1) * Math.PI / 180;
   const dLon = (lon2 - lon1) * Math.PI / 180;
   const a =
